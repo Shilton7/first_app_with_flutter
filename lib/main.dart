@@ -32,29 +32,75 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  var newTaskCtrl = TextEditingController();
+
+  void addItem() {
+    if (newTaskCtrl.text.isEmpty) return;
+
+    setState(() {
+      widget.items.add(Item(
+        title: newTaskCtrl.text,
+        done: false,
+      ));
+      newTaskCtrl.clear();
+    });
+  }
+
+  void removeItem(int index) {
+    setState(() {
+      widget.items.removeAt(index);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Todo List"),
+        title: TextFormField(
+          controller: newTaskCtrl,
+          keyboardType: TextInputType.text,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 19,
+          ),
+          decoration: InputDecoration(
+              labelText: "Novo Item",
+              labelStyle: TextStyle(
+                color: Colors.white,
+              )),
+        ),
       ),
       body: ListView.builder(
         itemCount: widget.items.length,
         itemBuilder: (BuildContext context, int index) {
           final item = widget.items[index];
 
-          return CheckboxListTile(
-            title: Text(item.title),
+          return Dismissible(
+            child: CheckboxListTile(
+              title: Text(item.title),
+              value: item.done,
+              onChanged: (bool value) {
+                setState(() {
+                  item.done = value;
+                  //print(item.done);
+                });
+              },
+            ),
             key: Key(item.title),
-            value: item.done,
-            onChanged: (bool value) {
-              setState(() {
-                item.done = value;
-                //print(item.done);
-              });
+            background: Container(
+              color: Colors.red.withOpacity(0.3),
+            ),
+            onDismissed: (direction) {
+              //print(direction);
+              removeItem(index);
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: addItem,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.green,
       ),
     );
   }
