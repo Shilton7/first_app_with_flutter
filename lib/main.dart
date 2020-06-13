@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo/models/item.dart';
 
 void main() => runApp(AppShilton());
@@ -22,9 +25,9 @@ class HomePage extends StatefulWidget {
 
   HomePage() {
     items = [];
-    items.add(Item(title: 'Produto 1', done: false));
-    items.add(Item(title: 'Produto 2', done: true));
-    items.add(Item(title: 'Produto 3', done: false));
+    // items.add(Item(title: 'Produto 1', done: false));
+    // items.add(Item(title: 'Produto 2', done: true));
+    // items.add(Item(title: 'Produto 3', done: false));
   }
 
   @override
@@ -42,14 +45,41 @@ class _HomePageState extends State<HomePage> {
         title: newTaskCtrl.text,
         done: false,
       ));
-      newTaskCtrl.clear();
+
+      newTaskCtrl.text = "";
+      saveItemStorage();
     });
   }
 
   void removeItem(int index) {
     setState(() {
       widget.items.removeAt(index);
+      saveItemStorage();
     });
+  }
+
+  Future loadItems() async {
+    var prefs = await SharedPreferences.getInstance();
+    var data = prefs.getString('data');
+
+    if (data != null) {
+      Iterable decoded = jsonDecode(data); //Iterable: coluna com interação
+      List<Item> result = decoded.map((x) => Item.fromJson(x)).toList();
+
+      setState(() {
+        widget.items = result;
+      });
+    }
+  }
+
+  saveItemStorage() async {
+    var prefs = await SharedPreferences.getInstance();
+    await prefs.setString('data', jsonEncode(widget.items));
+  }
+
+  //created
+  _HomePageState() {
+    loadItems();
   }
 
   @override
@@ -82,6 +112,7 @@ class _HomePageState extends State<HomePage> {
               onChanged: (bool value) {
                 setState(() {
                   item.done = value;
+                  saveItemStorage();
                   //print(item.done);
                 });
               },
